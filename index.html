@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arbre Généalogique ⚔️ L'Attaque des Titans</title>
+  <style>
+    /* ============================
+       VARIABLES & RESET
+    ============================ */
+    :root {
+      --bg:          #08080f;
+      --bg-card:     #111120;
+      --bg-card-h:   #1a1a30;
+      --border:      #252538;
+      --gold:        #c8a84b;
+      --gold-l:      #e8cc80;
+      --red:         #c0392b;
+      --green:       #27ae60;
+      --text:        #e8e0d0;
+      --muted:       #888;
+      --line:        rgba(200,168,75,.35);
+      --c-founding:  #b71c1c;
+      --c-attack:    #c0392b;
+      --c-colossal:  #e67e22;
+      --c-armored:   #7f8c8d;
+      --c-female:    #e91e8c;
+      --c-beast:     #5d4037;
+      --c-jaw:       #f39c12;
+      --c-cart:      #795548;
+      --c-warhammer: #9c27b0;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.4;
+    }
+    button { font-family: inherit; cursor: pointer; }
+    ul { list-style: none; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ============================
+       HEADER
+    ============================ */
+    header {
+      background: linear-gradient(160deg, #0a0a0f 0%, #1a0608 55%, #0a0a0f 100%);
+      border-bottom: 2px solid var(--gold);
+      padding: 18px 20px 14px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 4px 30px rgba(0,0,0,.9);
+    }
+    header h1 {
+      font-size: clamp(1.1rem, 3.5vw, 2.2rem);
+      color: var(--gold);
+      letter-spacing: .12em;
+      text-shadow: 0 0 30px rgba(200,168,75,.5);
+    }
+    header p {
+      color: var(--muted);
+      font-size: .82rem;
+      margin-top: 4px;
+      letter-spacing: .1em;
+    }
+
+    /* ============================
+       FILTER BAR
+    ============================ */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      justify-content: center;
+      padding: 12px 16px;
+      background: rgba(8,8,15,.95);
+      border-bottom: 1px solid var(--border);
+    }
+    .filter-btn {
+      padding: 5px 13px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--bg-card);
+      color: var(--muted);
+      font-size: .75rem;
+      letter-spacing: .05em;
+      transition: all .25s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(200,168,75,.08);
+    }
+
+    /* ============================
+       TIMELINE NAV
+    ============================ */
+    .timeline-nav {
+      display: flex;
+      overflow-x: auto;
+      gap: 6px;
+      padding: 10px 16px;
+      background: rgba(8,8,15,.9);
+      border-bottom: 1px solid var(--border);
+      scrollbar-width: thin;
+      scrollbar-color: var(--gold) transparent;
+    }
+    .tl-btn {
+      flex-shrink: 0;
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: transparent;
+      color: var(--muted);
+      font-size: .72rem;
+      white-space: nowrap;
+      transition: all .25s;
+    }
+    .tl-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold-l);
+    }
+
+    /* ============================
+       SPOILER NOTICE
+    ============================ */
+    .spoiler-bar {
+      background: rgba(192,57,43,.08);
+      border-bottom: 1px solid rgba(192,57,43,.3);
+      padding: 8px 20px;
+      text-align: center;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+    .spoiler-bar strong { color: var(--red); }
+
+    /* ============================
+       TREE CONTAINER
+    ============================ */
+    #tree {
+      padding: 30px 10px 60px;
+      overflow-x: auto;
+    }
+
+    /* ============================
+       ERA SECTION
+    ============================ */
+    .era {
+      margin-bottom: 50px;
+      scroll-margin-top: 90px;
+    }
+    .era-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding: 0 10px;
+    }
+    .era-head::before, .era-head::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+    .era-head span {
+      white-space: nowrap;
+      font-size: .82rem;
+      color: var(--gold);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      background: rgba(200,168,75,.07);
+      border: 1px solid rgba(200,168,75,.25);
+      padding: 4px 16px;
+      border-radius: 20px;
+    }
+
+    /* ============================
+       FAMILY GROUP
+    ============================ */
+    .family-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+    .family-label {
+      font-size: .7rem;
+      color: var(--muted);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border-left: 3px solid var(--gold);
+      padding-left: 8px;
+    }
+
+    /* ============================
+       TREE ROWS & CONNECTORS
+    ============================ */
+    .tree-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      align-items: flex-start;
+      position: relative;
+    }
+    /* Vertical line under a row */
+    .v-connector {
+      width: 2px;
+      height: 28px;
+      background: var(--line);
+      margin: 0 auto;
+    }
+    /* Horizontal spread under a couple */
+    .h-connector {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 0;
+      position: relative;
+    }
+    .h-connector::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 2px;
+      background: var(--line);
+      width: calc(100% - 60px);
+    }
+    .h-connector > .child-branch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .h-connector > .child-branch::before {
+      content: '';
+      width: 2px;
+      height: 28px;
+      background: var(--line);
+    }
+    /* Couple connector (horizontal line between partners) */
+    .couple-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+    .couple-line {
+      width: 36px;
+      height: 2px;
+      background: rgba(200,168,75,.55);
+      position: relative;
+    }
+    .couple-line::after {
+      content: '♥';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: .65rem;
+      color: var(--gold);
+    }
+
+    /* ============================
+       CHARACTER CARD
+    ============================ */
+    .card {
+      width: 112px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 11px 7px 9px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .25s, box-shadow .25s, border-color .25s, background .25s;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: var(--gold);
+      background: var(--bg-card-h);
+      box-shadow: 0 10px 30px rgba(200,168,75,.18);
+    }
+    .card.dead { opacity: .72; }
+    .card.dead .card-name::after {
+      content: ' †';
+      color: var(--red);
+      font-size: .7rem;
+    }
+
+    /* faction left border */
+    .f-yeager   { border-left: 3px solid #c0392b; }
+    .f-royal    { border-left: 3px solid var(--gold); }
+    .f-ackerman { border-left: 3px solid #607d8b; }
+    .f-warrior  { border-left: 3px solid #9c27b0; }
+    .f-survey   { border-left: 3px solid #27ae60; }
+    .f-ancient  { border-left: 3px solid var(--gold); }
+    .f-marley   { border-left: 3px solid #e67e22; }
+
+    /* Avatar circle */
+    .card-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+    }
+    .has-titan .card-avatar {
+      animation: titanGlow 3s ease-in-out infinite;
+    }
+    @keyframes titanGlow {
+      0%,100% { box-shadow: 0 0 4px rgba(200,168,75,.2); }
+      50%      { box-shadow: 0 0 14px rgba(200,168,75,.5); }
+    }
+
+    /* Avatar gradient by titan */
+    .av-founding  { background: linear-gradient(135deg,#3d0000,#8b0000); border-color:#b71c1c; }
+    .av-attack    { background: linear-gradient(135deg,#5a1a1a,#c0392b); border-color:#c0392b; }
+    .av-colossal  { background: linear-gradient(135deg,#5a3010,#e67e22); border-color:#e67e22; }
+    .av-armored   { background: linear-gradient(135deg,#2a3035,#7f8c8d); border-color:#7f8c8d; }
+    .av-female    { background: linear-gradient(135deg,#4a0a30,#e91e8c); border-color:#e91e8c; }
+    .av-beast     { background: linear-gradient(135deg,#2a1a10,#5d4037); border-color:#5d4037; }
+    .av-jaw       { background: linear-gradient(135deg,#4a3000,#f39c12); border-color:#f39c12; }
+    .av-cart      { background: linear-gradient(135deg,#2a1a10,#795548); border-color:#795548; }
+    .av-warhammer { background: linear-gradient(135deg,#2a0040,#9c27b0); border-color:#9c27b0; }
+    .av-royal     { background: linear-gradient(135deg,#2a2000,#7a5a10); border-color:var(--gold); }
+    .av-human     { background: linear-gradient(135deg,#141428,#252548); border-color:#3a3a5a; }
+    .av-survey    { background: linear-gradient(135deg,#0a2010,#1a5030); border-color:#27ae60; }
+
+    .card-name {
+      font-size: .72rem;
+      font-weight: bold;
+      color: var(--text);
+      margin-bottom: 3px;
+      line-height: 1.25;
+    }
+    .card-years {
+      font-size: .62rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    /* Titan badge */
+    .titan-badge {
+      display: inline-block;
+      font-size: .58rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: bold;
+      letter-spacing: .04em;
+      margin-top: 3px;
+      line-height: 1.6;
+    }
+    .tb-founding  { background: rgba(183,28,28,.3);  border:1px solid #b71c1c; color:#ff8888; }
+    .tb-attack    { background: rgba(192,57,43,.3);  border:1px solid #c0392b; color:#ff9988; }
+    .tb-colossal  { background: rgba(230,126,34,.3); border:1px solid #e67e22; color:#ffbb66; }
+    .tb-armored   { background: rgba(127,140,141,.3);border:1px solid #7f8c8d; color:#ccddee; }
+    .tb-female    { background: rgba(233,30,140,.3); border:1px solid #e91e8c; color:#ff88dd; }
+    .tb-beast     { background: rgba(93,64,55,.3);   border:1px solid #5d4037; color:#ccaa88; }
+    .tb-jaw       { background: rgba(243,156,18,.3); border:1px solid #f39c12; color:#ffdd55; }
+    .tb-cart      { background: rgba(121,85,72,.3);  border:1px solid #795548; color:#bb9977; }
+    .tb-warhammer { background: rgba(156,39,176,.3); border:1px solid #9c27b0; color:#dd99ff; }
+
+    /* Event dot */
+    .event-dot {
+      position: absolute;
+      top: -5px; right: -5px;
+      width: 17px; height: 17px;
+      background: var(--red);
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .55rem; font-weight: bold; color: #fff;
+    }
+
+    /* Hidden by filter */
+    .card.hidden { display: none !important; }
+
+    /* ============================
+       MODAL OVERLAY
+    ============================ */
+    #modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.87);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #modal-overlay.open { display: flex; }
+
+    #modal {
+      background: var(--bg-card);
+      border: 1px solid rgba(200,168,75,.45);
+      border-radius: 12px;
+      padding: 28px;
+      max-width: 580px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 0 60px rgba(200,168,75,.15);
+      scrollbar-width: thin;
+      scrollbar-color: var(--gold) transparent;
+    }
+    .modal-close {
+      position: absolute; top: 14px; right: 14px;
+      width: 28px; height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: transparent;
+      color: var(--muted);
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .modal-close:hover { border-color: var(--red); color: var(--red); }
+
+    .modal-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 20px;
+      padding-right: 30px;
+    }
+    .modal-av {
+      width: 76px; height: 76px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: bold; border: 2px solid;
+      flex-shrink: 0;
+    }
+    .modal-av-info { flex: 1; }
+    .modal-name { font-size: 1.3rem; color: var(--gold); margin-bottom: 4px; }
+    .modal-sub  { font-size: .8rem; color: var(--muted); }
+
+    .m-section { margin-bottom: 18px; }
+    .m-section-title {
+      font-size: .75rem; color: var(--gold);
+      text-transform: uppercase; letter-spacing: .15em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px; margin-bottom: 10px;
+    }
+    .m-text { font-size: .88rem; color: var(--text); line-height: 1.65; }
+
+    /* Titan info in modal */
+    .titan-info-box {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,.03);
+      border-radius: 7px; padding: 10px 12px;
+    }
+    .titan-icon { font-size: 1.5rem; }
+    .titan-info-box p { font-size: .85rem; color: var(--text); }
+    .titan-info-box span { display: block; font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+    /* Event list */
+    .event-list { display: flex; flex-direction: column; gap: 8px; }
+    .event-card {
+      display: flex; gap: 10px;
+      background: rgba(192,57,43,.06);
+      border-left: 3px solid var(--red);
+      border-radius: 0 6px 6px 0;
+      padding: 9px 12px;
+    }
+    .event-ep {
+      font-size: .72rem; color: var(--red);
+      font-weight: bold; min-width: 65px;
+      line-height: 1.5;
+    }
+    .event-body { flex: 1; }
+    .event-title { font-size: .85rem; color: var(--gold-l); margin-bottom: 3px; }
+    .event-desc  { font-size: .8rem; color: var(--text); line-height: 1.5; }
+
+    /* Family links */
+    .family-links { display: flex; flex-wrap: wrap; gap: 6px; }
+    .family-tag {
+      font-size: .72rem; padding: 3px 10px;
+      border-radius: 12px; border: 1px solid var(--border);
+      color: var(--muted); background: rgba(255,255,255,.03);
+      cursor: pointer; transition: all .2s;
+    }
+    .family-tag:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ============================
+       LEGEND
+    ============================ */
+    .legend {
+      padding: 24px 20px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+    }
+    .legend h3 {
+      font-size: .82rem; color: var(--gold);
+      letter-spacing: .15em; text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .legend-grid {
+      display: flex; flex-wrap: wrap; gap: 8px 18px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .74rem; color: var(--muted);
+    }
+    .legend-swatch {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.2);
+    }
+    .legend-line-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .74rem; color: var(--muted);
+    }
+    .legend-line {
+      width: 30px; height: 2px;
+    }
+
+    .credits {
+      text-align: center;
+      padding: 14px;
+      font-size: .72rem;
+      color: #444;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ============================
+       RESPONSIVE
+    ============================ */
+    @media (max-width: 600px) {
+      .card { width: 92px; padding: 9px 5px 7px; }
+      .card-avatar { width: 52px; height: 52px; font-size: 1.3rem; }
+      .card-name { font-size: .65rem; }
+      .card-years { font-size: .58rem; }
+      .tree-row { gap: 10px; }
+      .era-head span { font-size: .72rem; letter-spacing: .1em; }
+    }
+    @media (max-width: 400px) {
+      .card { width: 80px; }
+      .card-avatar { width: 44px; height: 44px; font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header>
+  <h1>⚔️ L'ATTAQUE DES TITANS — ARBRE GÉNÉALOGIQUE ⚔️</h1>
+  <p>Shingeki no Kyojin · Personnages · Lignées · Chronologie</p>
+</header>
+
+<!-- ===================== FILTER BAR ===================== -->
+<div class="filter-bar" id="filter-bar">
+  <button class="filter-btn active" data-filter="all">Tous</button>
+  <button class="filter-btn" data-filter="titan">Porteurs de Titans</button>
+  <button class="filter-btn" data-filter="f-yeager">Famille Yeager</button>
+  <button class="filter-btn" data-filter="f-royal">Famille Royale</button>
+  <button class="filter-btn" data-filter="f-ackerman">Clan Ackerman</button>
+  <button class="filter-btn" data-filter="f-warrior">Guerriers</button>
+  <button class="filter-btn" data-filter="f-survey">Corps d'Exploration</button>
+</div>
+
+<!-- ===================== TIMELINE NAV ===================== -->
+<nav class="timeline-nav">
+  <button class="tl-btn" onclick="scrollToEra('era-ancient')">~2000 ans av. JC</button>
+  <button class="tl-btn" onclick="scrollToEra('era-pre845')">Avant An 845</button>
+  <button class="tl-btn" onclick="scrollToEra('era-yeager')">Famille Yeager</button>
+  <button class="tl-btn" onclick="scrollToEra('era-ackerman')">Clan Ackerman</button>
+  <button class="tl-btn" onclick="scrollToEra('era-warriors')">Guerriers (An 850)</button>
+  <button class="tl-btn" onclick="scrollToEra('era-survey')">Corps d'Exploration (An 850+)</button>
+  <button class="tl-btn" onclick="scrollToEra('era-104')">104e Promotion (An 854)</button>
+</nav>
+
+<!-- ===================== SPOILER NOTICE ===================== -->
+<div class="spoiler-bar">
+  <strong>⚠ ATTENTION SPOILERS :</strong> Cet arbre contient des révélations de toutes les saisons. Cliquez sur une carte pour voir les événements importants.
+</div>
+
+<!-- ===================== TREE ===================== -->
+<main id="tree"></main>
+
+<!-- ===================== LEGEND ===================== -->
+<footer>
+  <div class="legend">
+    <h3>Légende des Titans des Neuf</h3>
+    <div class="legend-grid" id="titan-legend"></div>
+    <br/>
+    <h3 style="margin-top:10px;">Factions</h3>
+    <div class="legend-grid" id="faction-legend"></div>
+    <br/>
+    <h3 style="margin-top:10px;">Symboles</h3>
+    <div class="legend-grid">
+      <div class="legend-line-item">
+        <div class="legend-line" style="background:rgba(200,168,75,.55);"></div>
+        <span>Union / Couple</span>
+      </div>
+      <div class="legend-line-item">
+        <div class="legend-line" style="background:rgba(200,168,75,.35);"></div>
+        <span>Lien parent–enfant</span>
+      </div>
+      <div class="legend-item">
+        <div style="width:14px;height:14px;background:var(--red);border-radius:50%;border:1px solid #fff3"></div>
+        <span>Événements notables (cliquer)</span>
+      </div>
+      <div class="legend-item">
+        <span style="color:var(--red);font-weight:bold">†</span>
+        <span>Personnage décédé</span>
+      </div>
+    </div>
+  </div>
+  <div class="credits">Données basées sur le manga et l'anime Shingeki no Kyojin de Hajime Isayama · À des fins éducatives uniquement</div>
+</footer>
+
+<!-- ===================== MODAL ===================== -->
+<div id="modal-overlay">
+  <div id="modal">
+    <button class="modal-close" id="modal-close-btn" aria-label="Fermer">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ===================== SCRIPT ===================== -->
+<script>
+/* ==================================================
+   DATA
+================================================== */
+const TITAN_TYPES = {
+  founding:  { label: 'Titan Fondateur',       icon: '👁',  cls: 'tb-founding',  av: 'av-founding' },
+  attack:    { label: 'Titan Attaquant',        icon: '⚔️',  cls: 'tb-attack',    av: 'av-attack'   },
+  colossal:  { label: 'Titan Colossal',         icon: '🔥',  cls: 'tb-colossal',  av: 'av-colossal' },
+  armored:   { label: 'Titan Cuirassé',         icon: '🛡',  cls: 'tb-armored',   av: 'av-armored'  },
+  female:    { label: 'Titan Femelle',          icon: '🌸',  cls: 'tb-female',    av: 'av-female'   },
+  beast:     { label: 'Titan Bestial',          icon: '🦍',  cls: 'tb-beast',     av: 'av-beast'    },
+  jaw:       { label: 'Titan Mâchoire',         icon: '🦷',  cls: 'tb-jaw',       av: 'av-jaw'      },
+  cart:      { label: 'Titan Chariot',          icon: '🐎',  cls: 'tb-cart',      av: 'av-cart'     },
+  warhammer: { label: 'Titan Marteau de Guerre',icon: '🔨',  cls: 'tb-warhammer', av: 'av-warhammer'},
+};
+
+const FACTIONS = {
+  ancient:  { label: 'Antiquité / Eldia',       color: '#c8a84b' },
+  royal:    { label: 'Famille Royale / Reiss',  color: '#c8a84b' },
+  yeager:   { label: 'Famille Yeager',          color: '#c0392b' },
+  ackerman: { label: 'Clan Ackerman',           color: '#607d8b' },
+  warrior:  { label: 'Guerriers de Marley',     color: '#9c27b0' },
+  survey:   { label: 'Corps d\'Exploration',    color: '#27ae60' },
+  marley:   { label: 'Marley (autre)',          color: '#e67e22' },
+};
+
+/* Each character:
+   id, name, emoji, years, alive, faction, titan (key),
+   description, parents[], partner, children[], events[] */
+const CHARACTERS = {
+  // ─── ANCIENT ────────────────────────────────────────────────────────────
+  ymir_fritz: {
+    name: 'Ymir Fritz',
+    emoji: '👁',
+    years: 'Il y a ~2000 ans',
+    alive: false,
+    faction: 'ancient',
+    titan: 'founding',
+    description: 'Première "Sujette de Ymir" et origine de tous les pouvoirs des titans. Esclave d\'un roi eldien, elle conclut un pacte avec l\'entité de la terre en échange du pouvoir des titans. À sa mort, son âme fut divisée en neuf pouvoirs distincts.',
+    parents: [],
+    partner: 'fritz_king',
+    children: ['reiss_lineage'],
+    events: [
+      { ep: 'S4 Ép.20', title: 'Le Grondement — Les Chemins révélés', desc: 'Eren découvre Ymir Fritz emprisonnée dans les "Chemins" depuis 2000 ans, attendant quelqu\'un qui la libérerait de son esclavage.' },
+      { ep: 'S4 Ép.28', title: 'Libération de Ymir Fritz', desc: 'Mikasa tue Eren, libérant Ymir Fritz de son serment éternel envers le Roi des Titans.' },
+    ],
+  },
+  fritz_king: {
+    name: 'Roi Fritz (1er)',
+    emoji: '👑',
+    years: 'Il y a ~2000 ans',
+    alive: false,
+    faction: 'ancient',
+    titan: null,
+    description: 'Premier roi d\'Eldia qui réduisit Ymir Fritz en esclavage. Avec elle, il fonda la puissance militaire et impériale de l\'Empire Eldien.',
+    parents: [],
+    partner: 'ymir_fritz',
+    children: [],
+    events: [],
+  },
+
+  // ─── ROYAL / REISS ──────────────────────────────────────────────────────
+  reiss_lineage: {
+    name: 'Lignée Royale Eldienne',
+    emoji: '🏰',
+    years: '~2000 ans à An 845',
+    alive: false,
+    faction: 'royal',
+    titan: 'founding',
+    description: 'Succession des rois eldiens qui héritèrent du Titan Fondateur. Après le transfert sur Paradis, la famille se cacha sous le nom de "Reiss".',
+    parents: ['fritz_king', 'ymir_fritz'],
+    partner: null,
+    children: ['karl_fritz', 'uri_reiss'],
+    events: [
+      { ep: 'S3 Ép.6', title: 'Histoire des murs révélée', desc: 'L\'histoire secrète du roi Fritz qui a créé les murs et effacé la mémoire des Eldiens est exposée au spectateur.' },
+    ],
+  },
+  karl_fritz: {
+    name: 'Karl Fritz',
+    emoji: '👑',
+    years: 'An ~720 – An 743',
+    alive: false,
+    faction: 'royal',
+    titan: 'founding',
+    description: '145e Roi d\'Eldia. Il transféra la capitale sur l\'île de Paradis, érigea les Trois Murs grâce au Titan Fondateur et effaça la mémoire du peuple Eldien. Il implanta également le vœu pacifiste dans le Titan Fondateur.',
+    parents: ['reiss_lineage'],
+    partner: null,
+    children: ['uri_reiss'],
+    events: [
+      { ep: 'S3 Ép.6', title: 'Construction des Murs', desc: 'Révélation que Karl Fritz a utilisé le Titan Fondateur pour ériger les Trois Murs et amnésier les Eldiens de Paradis.' },
+    ],
+  },
+  uri_reiss: {
+    name: 'Uri Reiss',
+    emoji: '👑',
+    years: 'An ~800 – An 842',
+    alive: false,
+    faction: 'royal',
+    titan: 'founding',
+    description: 'Avant-dernier détenteur du Titan Fondateur au sein de la famille Reiss. Il renonça au pouvoir avant de le transmettre à Rod, puis à Frieda. Oncle de Rod Reiss.',
+    parents: ['karl_fritz'],
+    partner: null,
+    children: ['rod_reiss'],
+    events: [
+      { ep: 'S3 Ép.7', title: 'Rencontre avec Kenny', desc: 'Uri Reiss s\'agenouille devant Kenny Ackerman pour s\'excuser d\'avoir persécuté le Clan Ackerman, créant un lien fort entre eux.' },
+    ],
+  },
+  rod_reiss: {
+    name: 'Rod Reiss',
+    emoji: '🧔',
+    years: 'An ~810 – An 850',
+    alive: false,
+    faction: 'royal',
+    titan: null,
+    description: 'Chef de la famille Reiss et vrai roi dans l\'ombre derrière Historia. Il tenta de forcer Eren à rendre le Titan Fondateur à la famille Reiss. Se transforma en titan colossal anormal.',
+    parents: ['uri_reiss'],
+    partner: null,
+    children: ['frieda_reiss', 'historia_reiss'],
+    events: [
+      { ep: 'S3 Ép.13', title: 'Transformation de Rod Reiss', desc: 'Rod avale un sérum de titan et se transforme en titan colossal anormal rampant. Historia l\'affronte et le tue.' },
+    ],
+  },
+  frieda_reiss: {
+    name: 'Frieda Reiss',
+    emoji: '👸',
+    years: 'An ~828 – An 845',
+    alive: false,
+    faction: 'royal',
+    titan: 'founding',
+    description: 'Demi-sœur de Historia et détentrice du Titan Fondateur avant Grisha Yeager. Elle effaçait régulièrement les souvenirs de Historia. Tuée et dévorée par Grisha Yeager lors de la chute de Shiganshina.',
+    parents: ['rod_reiss'],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S3 Ép.13', title: 'Meurtre de Frieda par Grisha', desc: 'Grisha Yeager pénètre dans la chapelle des Reiss et dévore Frieda pour prendre le Titan Fondateur, obéissant à la mission de l\'Hibou (Eren Kruger).' },
+    ],
+  },
+  historia_reiss: {
+    name: 'Historia Reiss',
+    emoji: '👸',
+    years: 'An 835 –',
+    alive: true,
+    faction: 'royal',
+    titan: null,
+    description: 'Alias "Krista Lenz" dans la 104e promotion. Fille illégitime de Rod Reiss et véritable héritière du trône d\'Eldia. Devint Reine de Paradis après la chute de Rod. Connue pour sa compassion.',
+    parents: ['rod_reiss'],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S3 Ép.5',  title: 'Révélation : Historia = Krista Lenz', desc: 'Erwin révèle que "Krista Lenz" est en réalité Historia Reiss, héritière au trône.' },
+      { ep: 'S3 Ép.13', title: 'Historia tue Rod Reiss', desc: 'Historia affronte son père transformé en titan colossale et le tranche, devenant Reine de Paradis.' },
+      { ep: 'S4 Ép.15', title: 'Grossesse d\'Historia', desc: 'Historia est enceinte, ce qui lui permet d\'éviter temporairement d\'hériter du Titan Fondateur.' },
+    ],
+  },
+
+  // ─── YEAGER ─────────────────────────────────────────────────────────────
+  dina_fritz: {
+    name: 'Dina Fritz',
+    emoji: '🏛',
+    years: 'An ~815 – An 845',
+    alive: false,
+    faction: 'yeager',
+    titan: null,
+    description: 'Descendante de la famille royale Fritz de Marley. Épouse de Grisha Yeager et mère de Zeke. Après la trahison de Zeke, elle fut transformée en titan pur et envoyée à Paradis. C\'est elle qui dévora Carla Yeager.',
+    parents: [],
+    partner: 'grisha_yeager',
+    children: ['zeke_yeager'],
+    events: [
+      { ep: 'S3 Ép.16', title: 'Révélation : Dina = Titan souriant', desc: 'Il est révélé que le Titan souriant qui dévora la mère d\'Eren était en réalité Dina Fritz, sa belle-mère.' },
+    ],
+  },
+  grisha_yeager: {
+    name: 'Grisha Yeager',
+    emoji: '🔬',
+    years: 'An ~814 – An 845',
+    alive: false,
+    faction: 'yeager',
+    titan: ['attack', 'founding'],
+    description: 'Médecin eldien de Marley converti en guerrier. Ancien membre des Restaurateurs d\'Eldia. Porteur du Titan Attaquant transmis par Kruger ("l\'Owlot"), puis du Titan Fondateur pris aux Reiss. Père de Zeke (avec Dina) et d\'Eren (avec Carla). Il transmit le Titan Attaquant à Eren.',
+    parents: [],
+    partner: 'dina_fritz',
+    children: ['zeke_yeager', 'eren_yeager'],
+    events: [
+      { ep: 'S3 Ép.13', title: 'Grisha prend le Titan Fondateur', desc: 'Guidé par les souvenirs futurs d\'Eren, Grisha attaque la chapelle et dévore Frieda Reiss pour voler le Titan Fondateur.' },
+      { ep: 'S3 Ép.16', title: 'Grisha transmet le Titan Attaquant à Eren', desc: 'Grisha injecte le sérum à Eren dans la cave de Shiganshina, lui transmettant le Titan Attaquant.' },
+    ],
+  },
+  carla_yeager: {
+    name: 'Carla Yeager',
+    emoji: '🏠',
+    years: 'An ~817 – An 845',
+    alive: false,
+    faction: 'yeager',
+    titan: null,
+    description: 'Mère d\'Eren Yeager et épouse de Grisha. Femme aimante et forte, elle fut dévorée par le Titan souriant (Dina Fritz) lors de la chute du Mur Maria. Sa mort motiva Eren à rejoindre le Corps d\'Exploration.',
+    parents: [],
+    partner: 'grisha_yeager',
+    children: ['eren_yeager'],
+    events: [
+      { ep: 'S1 Ép.1', title: 'Mort de Carla Yeager', desc: 'Le Titan Colossal détruit la porte de Shiganshina. Carla est coincée sous les décombres et dévorée par le Titan souriant sous les yeux d\'Eren et Mikasa.' },
+    ],
+  },
+  eren_yeager: {
+    name: 'Eren Yeager',
+    emoji: '⚔️',
+    years: 'An 835 – An 854',
+    alive: false,
+    faction: 'yeager',
+    titan: ['attack', 'founding', 'warhammer'],
+    description: 'Protagoniste principal. Porteur du Titan Attaquant, du Titan Fondateur et du Titan Marteau de Guerre. Après avoir vu sa mère dévorée, il s\'engage à exterminer les titans. Son chemin l\'amènera à déclencher le "Grondement" pour anéantir le monde en dehors des murs.',
+    parents: ['grisha_yeager', 'carla_yeager'],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.1',  title: 'Chute de Shiganshina — Mort de Carla', desc: 'Eren est témoin de la mort de sa mère dévorée par un titan. Il jure d\'exterminer tous les titans.' },
+      { ep: 'S1 Ép.5',  title: 'Première transformation en titan', desc: 'Eren se transforme en titan pour la première fois en tentant de sauver Armin, révélant son pouvoir au bataillon.' },
+      { ep: 'S2 Ép.12', title: 'Capture par Reiner et Bertholdt', desc: 'Eren est kidnappé par les Guerriers alors que Reiner et Bertholdt se révèlent être le Titan Cuirassé et le Titan Colossal.' },
+      { ep: 'S3 Ép.7',  title: 'Contact avec Historia — Accès aux souvenirs', desc: 'En touchant Historia, Eren accède aux souvenirs de Grisha et réalise la vérité sur les titans des murs.' },
+      { ep: 'S4 Ép.5',  title: 'Titan Marteau de Guerre — Attaque de Liberio', desc: 'Lors du Festival de Liberio, Eren se transforme en titan et affronte puis dévore la détentrice du Titan Marteau de Guerre.' },
+      { ep: 'S4 Ép.20', title: 'Le Grondement commence', desc: 'Eren libère les Titans Colossaux des murs, déclenchant le "Grondement" pour aplatir le monde en dehors de Paradis.' },
+      { ep: 'S4 Ép.28', title: 'Mort d\'Eren', desc: 'Mikasa décapite Eren à bord du Titan Colossal. Son mort libère Ymir Fritz et met fin au Grondement.' },
+    ],
+  },
+  zeke_yeager: {
+    name: 'Zeke Yeager',
+    emoji: '🦍',
+    years: 'An 821 – An 854',
+    alive: false,
+    faction: 'warrior',
+    titan: 'beast',
+    description: 'Demi-frère aîné d\'Eren. Fils de Grisha et Dina Fritz. Guerrier de Marley porteur du Titan Bestial. Développa le "Plan pour l\'Euthanasie Eldienne" pour stériliser les Eldiens. Finalement sacrifié lors du Grondement.',
+    parents: ['grisha_yeager', 'dina_fritz'],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S2 Ép.12', title: 'Première apparition du Titan Bestial', desc: 'Zeke apparaît comme le mystérieux Titan Bestial qui contrôle les titans sans crier.' },
+      { ep: 'S3 Ép.16', title: 'Bataille de Shiganshina — Zeke vs Levi', desc: 'Zeke affronte Levi lors de la Bataille de Shiganshina et est défait mais s\'échappe.' },
+      { ep: 'S4 Ép.15', title: 'Alliance Eren-Zeke dans les Chemins', desc: 'Zeke et Eren se rejoignent dans les Chemins pour exécuter le plan d\'euthanasie, mais Eren trahit Zeke et déclenche le Grondement.' },
+      { ep: 'S4 Ép.20', title: 'Exécution de Zeke par Levi', desc: 'Levi Ackerman tue Zeke Yeager, mettant fin à la lignée masculine des Yeager.' },
+    ],
+  },
+
+  // ─── ACKERMAN ────────────────────────────────────────────────────────────
+  ackerman_ancestor: {
+    name: 'Clan Ackerman',
+    emoji: '🗡',
+    years: 'Époque ancienne',
+    alive: false,
+    faction: 'ackerman',
+    titan: null,
+    description: 'Clan de guerriers créé à l\'origine pour protéger le Roi des Titans. Les Ackerman ont subi des modifications biologiques leur conférant des capacités combatives surhumaines. Ils furent persécutés car ils ne pouvaient pas être amnésiés.',
+    parents: [],
+    partner: null,
+    children: ['kenny_ackerman', 'mikasa_parents'],
+    events: [],
+  },
+  kenny_ackerman: {
+    name: 'Kenny Ackerman',
+    emoji: '🔫',
+    years: 'An ~800 – An 850',
+    alive: false,
+    faction: 'ackerman',
+    titan: null,
+    description: 'Légendaire tueur connu sous le nom de "Kenny le Tueur". Oncle de Levi. Capitaine de la Police Royale des Premiers Murs, fidèle à Uri Reiss. Aspira à posséder le Titan Fondateur.',
+    parents: ['ackerman_ancestor'],
+    partner: null,
+    children: ['levi_ackerman'],
+    events: [
+      { ep: 'S3 Ép.7',  title: 'Mort de Kenny Ackerman', desc: 'Mortellement blessé, Kenny révèle à Levi ses origines et meurt en lui offrant un sérum de titan.' },
+    ],
+  },
+  kuchel_ackerman: {
+    name: 'Kuchel Ackerman',
+    emoji: '👩',
+    years: 'An ~802 – An ~830',
+    alive: false,
+    faction: 'ackerman',
+    titan: null,
+    description: 'Sœur de Kenny Ackerman et mère de Levi. Travailleuse dans un bordel souterrain de la capitale. Décédée de maladie, laissant Levi orphelin dans le quartier souterrain.',
+    parents: ['ackerman_ancestor'],
+    partner: null,
+    children: ['levi_ackerman'],
+    events: [],
+  },
+  levi_ackerman: {
+    name: 'Levi Ackerman',
+    emoji: '⚡',
+    years: 'An ~826 –',
+    alive: true,
+    faction: 'survey',
+    titan: null,
+    description: 'Capitaine du Corps d\'Exploration, surnommé "L\'Humanité la Plus Puissante". Membre du Clan Ackerman, il possède des capacités combatives surhumaines. Fils illégitime de Kuchel Ackerman, élevé par Kenny dans les bidonvilles souterrains.',
+    parents: ['kenny_ackerman', 'kuchel_ackerman'],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S2 Ép.12', title: 'Sauvetage d\'Eren', desc: 'Levi et Mikasa sauvent Eren kidnappé par Reiner et Bertholdt dans une course effrénée à travers la forêt.' },
+      { ep: 'S3 Ép.16', title: 'Mort d\'Erwin — Décision de Levi', desc: 'Levi doit choisir d\'injecter le sérum de titan à Armin ou Erwin mourant. Il choisit Armin, brisant son vœu à Erwin.' },
+      { ep: 'S4 Ép.20', title: 'Explosion du tonnerre de Zeke', desc: 'Zeke fait exploser un tonnerre de foudre qui défigure grièvement Levi. Il survit avec des cicatrices et perd deux doigts.' },
+      { ep: 'S4 Ép.20', title: 'Levi tue Zeke Yeager', desc: 'Malgré ses blessures, Levi décapite Zeke Yeager lors du Grondement.' },
+    ],
+  },
+  mikasa_parents: {
+    name: 'Parents de Mikasa',
+    emoji: '🏮',
+    years: '? – An 844',
+    alive: false,
+    faction: 'ackerman',
+    titan: null,
+    description: 'Père Ackerman et mère asiatique de Mikasa. Assassinés par des trafiquants d\'esclaves devant les yeux de Mikasa et Eren (âgé de 9 ans). Leur mort traumatisa profondément Mikasa.',
+    parents: ['ackerman_ancestor'],
+    partner: null,
+    children: ['mikasa_ackerman'],
+    events: [
+      { ep: 'S1 Ép.6', title: 'Assassinat des parents de Mikasa', desc: 'En flashback, des trafiquants tuent les parents de Mikasa. Eren sauve Mikasa et c\'est alors qu\'elle éveille son instinct Ackerman.' },
+    ],
+  },
+  mikasa_ackerman: {
+    name: 'Mikasa Ackerman',
+    emoji: '🏮',
+    years: 'An 835 –',
+    alive: true,
+    faction: 'survey',
+    titan: null,
+    description: 'Meilleure recrue de la 104e promotion. Membre du Clan Ackerman de sang (côté paternel) et descendante des Asiatiques. Dédiée à protéger Eren jusqu\'à sa mort. Finalement, elle est celle qui met fin au Grondement en tuant Eren.',
+    parents: ['mikasa_parents'],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.1',  title: 'Chute de Shiganshina — Mur Maria', desc: 'Mikasa fuit Shiganshina avec Eren et Armin lors de la chute du Mur Maria.' },
+      { ep: 'S2 Ép.12', title: 'Mikasa embrasse Eren', desc: 'Dans un moment d\'émotion intense croyant Eren mort, Mikasa lui dit qu\'elle a de l\'affection pour lui.' },
+      { ep: 'S4 Ép.28', title: 'Mikasa tue Eren', desc: 'Dans la tête du Titan Colossal, Mikasa décapite Eren pour stopper le Grondement, réalisant sa dernière parole d\'adieu.' },
+    ],
+  },
+
+  // ─── WARRIORS (MARLEY) ──────────────────────────────────────────────────
+  bertholdt_hoover: {
+    name: 'Bertholdt Hoover',
+    emoji: '🔥',
+    years: 'An 833 – An 850',
+    alive: false,
+    faction: 'warrior',
+    titan: 'colossal',
+    description: 'Guerrier de Marley porteur du Titan Colossal. Intégra la 104e promotion avec Reiner et Annie pour récupérer le Titan Fondateur. Tué lors de la Bataille de Shiganshina et son titan hérité par Armin.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.1',  title: 'Destruction de la porte de Shiganshina', desc: 'Bertholdt se transforme en Titan Colossal et détruit la porte extérieure de Shiganshina, déclenchant les événements de la série.' },
+      { ep: 'S2 Ép.12', title: 'Révélation comme Guerrier', desc: 'Bertholdt révèle avec Reiner qu\'ils sont des Guerriers de Marley envoyés pour récupérer le Titan Fondateur.' },
+      { ep: 'S3 Ép.17', title: 'Mort de Bertholdt — Armin hérite du titan', desc: 'Armin, sacrifiant son corps, laisse le Titan Colossal de Bertholdt le "cuire". Levi sauve Armin avec le sérum, qui dévore ensuite Bertholdt.' },
+    ],
+  },
+  armin_arlert: {
+    name: 'Armin Arlert',
+    emoji: '💡',
+    years: 'An 835 –',
+    alive: true,
+    faction: 'survey',
+    titan: 'colossal',
+    description: 'Meilleur ami d\'Eren et Mikasa. Stratège génial de la 104e promotion. Hérita du Titan Colossal après avoir mangé Bertholdt Hoover. Devint Commandant du Corps d\'Exploration et participa aux négociations de paix après le Grondement.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.1',  title: 'Chute de Shiganshina', desc: 'Armin survit à la destruction de Shiganshina et fuit avec Eren et Mikasa.' },
+      { ep: 'S3 Ép.17', title: 'Armin hérite du Titan Colossal', desc: 'Après un choix déchirant de Levi (Armin vs Erwin), Armin reçoit le sérum qui le sauve, puis dévore Bertholdt pour hériter de son titan.' },
+      { ep: 'S4 Ép.20', title: 'Armin tente d\'arrêter Eren', desc: 'Armin affronte Eren et tente de le raisonner avant que le Grondement commence.' },
+      { ep: 'S4 Ép.28', title: 'Armin représente Paradis en Diplomatie', desc: 'Après le Grondement, Armin devient l\'ambassadeur de Paradis dans les pourparlers de paix mondiaux.' },
+    ],
+  },
+  reiner_braun: {
+    name: 'Reiner Braun',
+    emoji: '🛡',
+    years: 'An 832 –',
+    alive: true,
+    faction: 'warrior',
+    titan: 'armored',
+    description: 'Guerrier de Marley porteur du Titan Cuirassé. Intégra la 104e promotion pour infiltrer Paradis. Souffrit d\'un trouble dissociatif entre son identité de Guerrier et de Camarade. L\'un des personnages les plus tragiques de la série.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.1',  title: 'Destruction du Mur Maria', desc: 'Reiner (en Titan Cuirassé) enfonce la porte intérieure de Shiganshina, causant l\'inondation de titans dans le district.' },
+      { ep: 'S2 Ép.12', title: 'Révélation de Reiner et Bertholdt', desc: 'Reiner annonce à Eren qu\'il est le Titan Cuirassé et Bertholdt le Titan Colossal, en plein combat.' },
+      { ep: 'S4 Ép.1',  title: 'Retour à Marley — Culpabilité de Reiner', desc: 'Reiner retrouve Falco et tente de se suicider, rongé par sa culpabilité. Sauvé par les révélations sur sa famille.' },
+    ],
+  },
+  annie_leonhart: {
+    name: 'Annie Leonhart',
+    emoji: '🌸',
+    years: 'An 832 –',
+    alive: true,
+    faction: 'warrior',
+    titan: 'female',
+    description: 'Guerrière de Marley porteuse du Titan Femelle. Intégra la 104e promotion pour retrouver le Titan Fondateur. Après sa révélation, elle s\'est cristallisée pendant 4 ans à Stohess. Libérée lors du siège de Paradis par Marley.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.11', title: 'Révélation du Titan Femelle', desc: 'La Titan Femelle chasse le Corps d\'Exploration dans l\'arbre forestier et capture Eren.' },
+      { ep: 'S1 Ép.14', title: 'Révélation : Annie = Titan Femelle', desc: 'Eren et Armin découvrent qu\'Annie est le Titan Femelle lors du test dans le district Stohess.' },
+      { ep: 'S1 Ép.14', title: 'Cristallisation d\'Annie', desc: 'Acculée par Eren, Annie se cristallise dans un cocon protecteur pour éviter d\'être capturée vivante.' },
+      { ep: 'S4 Ép.15', title: 'Libération d\'Annie', desc: 'Annie se réveille de sa cristallisation pendant l\'invasion de Marley sur Paradis.' },
+    ],
+  },
+  pieck_finger: {
+    name: 'Pieck Finger',
+    emoji: '🐎',
+    years: 'An 832 –',
+    alive: true,
+    faction: 'warrior',
+    titan: 'cart',
+    description: 'Guerrière de Marley porteuse du Titan Chariot. Intelligente et rusée, elle joua un rôle crucial dans plusieurs opérations militaires. Porta des canons sur son titan lors de la Bataille de Shiganshina.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S3 Ép.16', title: 'Titan Chariot à Shiganshina', desc: 'Pieck participe à la contre-attaque de Marley à Shiganshina, aidant Zeke et Reiner.' },
+      { ep: 'S4 Ép.18', title: 'Trahison de Pieck — Aide à Paradis', desc: 'Pieck feint de trahir Marley pour rejoindre Paradis, puis aide à l\'attaque du Port de Paradis.' },
+    ],
+  },
+  ymir_jaw: {
+    name: 'Ymir (Mâchoire)',
+    emoji: '🦷',
+    years: 'An ~820 – An 854',
+    alive: false,
+    faction: 'warrior',
+    titan: 'jaw',
+    description: 'Membre de la 104e promotion et porteuse du Titan Mâchoire. Elle fut autrefois une fille impersonnifiant frauduleusement Ymir Fritz pour un culte. Condamnée à errer sous forme de titan pur pendant 60 ans avant d\'être mangée par un Guerrier. Sacrifiée à Marley pour sauver Historia.',
+    parents: [],
+    partner: 'historia_reiss',
+    children: [],
+    events: [
+      { ep: 'S2 Ép.6',  title: 'Révélation : Ymir est un titan', desc: 'Ymir se révèle être un titan lors de la prise du Château Utgard, se transformant pour sauver ses camarades.' },
+      { ep: 'S2 Ép.12', title: 'Ymir se rend à Reiner et Bertholdt', desc: 'Ymir choisit de suivre Reiner et Bertholdt pour payer sa "dette" envers la famille Reiss, se sacrifiant pour Historia.' },
+    ],
+  },
+  porco_galliard: {
+    name: 'Porco Galliard',
+    emoji: '🦷',
+    years: 'An ~830 – An 854',
+    alive: false,
+    faction: 'warrior',
+    titan: 'jaw',
+    description: 'Guerrier de Marley porteur du Titan Mâchoire après avoir mangé Ymir. Frère de Marcel Galliard (premier porteur du Titan Mâchoire). Tué par le Titan Fondateur d\'Eren lors du Grondement, son titan hérité par Falco.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S4 Ép.5',  title: 'Porco piégé par Eren', desc: 'Lors de la bataille de Liberio, Eren piège le Titan Mâchoire pour briser la coque du Titan Marteau de Guerre.' },
+      { ep: 'S4 Ép.20', title: 'Mort de Porco — Falco hérite', desc: 'Porco se sacrifie en laissant Falco (transformé en titan pur par la liqueur de Zeke) le dévorer, lui transmettant ainsi le Titan Mâchoire.' },
+    ],
+  },
+  falco_grice: {
+    name: 'Falco Grice',
+    emoji: '🦅',
+    years: 'An ~838 –',
+    alive: true,
+    faction: 'warrior',
+    titan: 'jaw',
+    description: 'Cadet de Marley, amoureux de Gabi Braun. Hérita accidentellement du Titan Mâchoire après avoir bu la liqueur vertébrale de Zeke. Manifesta des traits aviaires dans sa forme titan, lui permettant de voler.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S4 Ép.15', title: 'Falco transformé en titan', desc: 'Falco est transformé en titan pur par la liqueur vertébrale de Zeke Yeager.' },
+      { ep: 'S4 Ép.20', title: 'Falco hérite du Titan Mâchoire', desc: 'Falco mange Porco Galliard et hérite du Titan Mâchoire, manifestant des ailes d\'oiseau.' },
+    ],
+  },
+  willy_tybur: {
+    name: 'Willy Tybur',
+    emoji: '🔨',
+    years: 'An ~810 – An 854',
+    alive: false,
+    faction: 'marley',
+    titan: 'warhammer',
+    description: 'Chef de la famille Tybur et représentant de la vérité historique d\'Eldia. Sa sœur était la réelle porteuse du Titan Marteau de Guerre (le chef de famille n\'est jamais le porteur). Il fut tué par Eren lors du Festival de Liberio.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S4 Ép.4',  title: 'Discours de Willy Tybur à Liberio', desc: 'Willy Tybur révèle la véritable histoire d\'Helos et convainc le monde de déclarer la guerre à Paradis. Tué par Eren en plein discours.' },
+      { ep: 'S4 Ép.5',  title: 'Eren dévore le Titan Marteau de Guerre', desc: 'La sœur de Willy, vraie porteuse du Titan Marteau de Guerre, est dévorée par Eren qui hérite du pouvoir.' },
+    ],
+  },
+
+  // ─── SURVEY CORPS ────────────────────────────────────────────────────────
+  erwin_smith: {
+    name: 'Erwin Smith',
+    emoji: '🦅',
+    years: 'An ~814 – An 850',
+    alive: false,
+    faction: 'survey',
+    titan: null,
+    description: 'Commandant du Corps d\'Exploration. Stratège visionnaire et chef charismatique. Son rêve était de découvrir la vérité sur le monde et sur les sous-sols de Shiganshina. Mortellement blessé lors de la Bataille de Shiganshina, Levi choisit de sauver Armin.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S2 Ép.12', title: 'Bras d\'Erwin sectionné', desc: 'Lors de la bataille du Mur Rose, un titan arrache le bras droit d\'Erwin, qui continue malgré tout à commander la charge.' },
+      { ep: 'S3 Ép.16', title: 'Mort d\'Erwin Smith', desc: 'Erwin mène la "Charge Héroïque" en sachant qu\'ils vont mourir. Mortellement blessé, Levi refuse de le sauver en choisissant Armin.' },
+    ],
+  },
+  hange_zoe: {
+    name: 'Hange Zoë',
+    emoji: '🔭',
+    years: 'An ~812 – An 854',
+    alive: false,
+    faction: 'survey',
+    titan: null,
+    description: 'Commandant de section du Corps d\'Exploration, passionnée par la recherche sur les titans. Succéda à Erwin comme Commandant du Corps. Se sacrifia pour ralentir le Grondement.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S3 Ép.16', title: 'Hange succède à Erwin', desc: 'Après la mort d\'Erwin, Levi nomme Hange nouveau Commandant du Corps d\'Exploration.' },
+      { ep: 'S4 Ép.28', title: 'Mort de Hange — Sacrifice héroïque', desc: 'Hange se sacrifice seul·e face aux Titans Colossaux du Grondement pour permettre à ses alliés de s\'échapper et d\'arrêter Eren.' },
+    ],
+  },
+  connie_springer: {
+    name: 'Connie Springer',
+    emoji: '💨',
+    years: 'An 835 –',
+    alive: true,
+    faction: 'survey',
+    titan: null,
+    description: 'Membre de la 104e promotion, vif et loyal. Son village natal fut victime d\'une expérience de Zeke qui transforma les habitants en titans. Sa mère fut transformée en titan et resta coincée sur sa maison.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S2 Ép.1',  title: 'Village de Connie — Les habitants en titans', desc: 'Connie découvre son village désert et des traces indiquant que les habitants ont été transformés en titans.' },
+      { ep: 'S4 Ép.15', title: 'Connie kidnappe Falco', desc: 'Connie kidnappe Falco (transformé en titan) dans l\'espoir de le faire manger sa mère-titan pour lui rendre son humanité.' },
+    ],
+  },
+  sasha_blouse: {
+    name: 'Sasha Blouse',
+    emoji: '🏹',
+    years: 'An 834 – An 854',
+    alive: false,
+    faction: 'survey',
+    titan: null,
+    description: 'Membre de la 104e promotion connue pour sa gloutonnerie. Excellente archère et chasseuse, fille d\'un chasseur du village de Dauper. Tuée par Gabi lors du retour en dirigeable de l\'opération de Liberio.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.4',  title: 'Sasha sauve une fille d\'un titan', desc: 'Sasha sauve seule une enfant d\'un titan pur avec un couteau de cuisine, révélant son courage.' },
+      { ep: 'S4 Ép.6',  title: 'Mort de Sasha Blouse', desc: 'Gabi, cadet de Marley, abat Sasha dans le dirigeable de retour. La mort de Sasha choque profondément l\'équipe.' },
+    ],
+  },
+  jean_kirstein: {
+    name: 'Jean Kirstein',
+    emoji: '🐴',
+    years: 'An 835 –',
+    alive: true,
+    faction: 'survey',
+    titan: null,
+    description: 'Membre de la 104e promotion. Initialement motivé par l\'ambition personnelle (rejoindre la Police Royale), il devint un leader naturel au combat. Grand admirateur d\'Erwin Smith. Un des survivants du Grondement.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.2',  title: 'Rivalité Jean–Eren', desc: 'Jean et Eren s\'affrontent verbalement pendant l\'entraînement, Jean révélant ses ambitions égoïstes vs le rêve d\'Eren.' },
+      { ep: 'S4 Ép.28', title: 'Jean survit au Grondement', desc: 'Jean fait partie de l\'Alliance qui affronte Eren lors du Grondement final et survit.' },
+    ],
+  },
+
+  // ─── MISC / MARLEY ──────────────────────────────────────────────────────
+  dot_pyxis: {
+    name: 'Dot Pyxis',
+    emoji: '🎖',
+    years: 'An ~790 – An 854',
+    alive: false,
+    faction: 'survey',
+    titan: null,
+    description: 'Commandant en Chef de la Garnison dans la région de la Muraille Sud. Stratège calme et pragmatique, aimant le saké. Transformé en titan pur par la liqueur vertébrale de Zeke.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S1 Ép.8',  title: 'Plan de reconquête du Mur Maria', desc: 'Pyxis orchestre le plan d\'utiliser le titan d\'Eren pour boucher la brèche dans le Mur Maria.' },
+      { ep: 'S4 Ép.15', title: 'Mort de Pyxis — Transformé en titan', desc: 'Pyxis boit la liqueur vertébrale de Zeke et est transformé en titan pur. Abattu par le Corps d\'Exploration.' },
+    ],
+  },
+  floch_forster: {
+    name: 'Floch Forster',
+    emoji: '🔥',
+    years: 'An 835 – An 854',
+    alive: false,
+    faction: 'survey',
+    titan: null,
+    description: 'Membre de la 104e promotion survivant de la Charge Héroïque. Devint un fanatique du mouvement Yeageriste, croyant qu\'Eren et le Grondement étaient la seule façon de sauver Paradis.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S3 Ép.16', title: 'Floch et la Charge Héroïque', desc: 'Floch est l\'un des rares survivants de la Charge Héroïque, choqué d\'avoir survécu.' },
+      { ep: 'S4 Ép.20', title: 'Floch mène les Yeageristes', desc: 'Floch prend la tête des Yeageristes et tente de couler le navire de l\'Alliance pour stopper l\'attaque contre Eren.' },
+    ],
+  },
+  gabi_braun: {
+    name: 'Gabi Braun',
+    emoji: '💢',
+    years: 'An ~840 –',
+    alive: true,
+    faction: 'warrior',
+    titan: null,
+    description: 'Cousine de Reiner Braun. Candidate Guerrière brillante et idéologiquement endoctrinée, dédiée à l\'extermination des "Diables de Paradis". Tua Sasha Blouse. Évolua et remit en question ses croyances après sa captivité à Paradis.',
+    parents: [],
+    partner: null,
+    children: [],
+    events: [
+      { ep: 'S4 Ép.6',  title: 'Gabi tue Sasha', desc: 'Gabi s\'infiltre dans le dirigeable et abat Sasha Blouse, provoquant un traumatisme dans le groupe de Survey Corps.' },
+      { ep: 'S4 Ép.15', title: 'Gabi tire sur la nuque d\'Eren', desc: 'Gabi décapite Eren avec un fusil à longue portée, ce qui déclenche une chaîne d\'événements sur les Chemins.' },
+    ],
+  },
+};
+
+/* ==================================================
+   TREE LAYOUT — organized chronologically by era
+================================================== */
+const TREE_LAYOUT = [
+  {
+    id: 'era-ancient',
+    title: '⚱ Ère Ancienne — Il y a ~2000 ans',
+    groups: [
+      {
+        label: 'Origine des Titans',
+        rows: [
+          {
+            type: 'couple',
+            left: 'ymir_fritz',
+            right: 'fritz_king',
+            children: ['reiss_lineage'],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'era-pre845',
+    title: '🏰 Famille Royale Reiss — Avant An 845',
+    groups: [
+      {
+        label: 'Lignée Royale',
+        rows: [
+          { type: 'row', chars: ['karl_fritz'] },
+          { type: 'row', chars: ['uri_reiss'] },
+          { type: 'row', chars: ['rod_reiss'] },
+          { type: 'row', chars: ['frieda_reiss', 'historia_reiss'] },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'era-yeager',
+    title: '⚔️ Famille Yeager',
+    groups: [
+      {
+        label: 'Première union (Marley)',
+        rows: [
+          {
+            type: 'couple',
+            left: 'dina_fritz',
+            right: 'grisha_yeager',
+            children: ['zeke_yeager'],
+          },
+        ],
+      },
+      {
+        label: 'Deuxième union (Paradis)',
+        rows: [
+          {
+            type: 'couple',
+            left: 'carla_yeager',
+            right: 'grisha_yeager',
+            children: ['eren_yeager'],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'era-ackerman',
+    title: '🗡 Clan Ackerman',
+    groups: [
+      {
+        label: 'Branche Kenny — Levi',
+        rows: [
+          { type: 'row', chars: ['ackerman_ancestor'] },
+          { type: 'row', chars: ['kenny_ackerman', 'kuchel_ackerman'] },
+          { type: 'row', chars: ['levi_ackerman'] },
+        ],
+      },
+      {
+        label: 'Branche Mikasa',
+        rows: [
+          { type: 'row', chars: ['mikasa_parents'] },
+          { type: 'row', chars: ['mikasa_ackerman'] },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'era-warriors',
+    title: '🟣 Guerriers de Marley — An 845–854',
+    groups: [
+      {
+        label: 'Les Neuf Guerriers',
+        rows: [
+          { type: 'row', chars: ['reiner_braun', 'bertholdt_hoover', 'annie_leonhart', 'pieck_finger', 'zeke_yeager'] },
+          { type: 'row', chars: ['ymir_jaw', 'porco_galliard', 'falco_grice', 'willy_tybur'] },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'era-survey',
+    title: '🟢 Corps d\'Exploration — Commandement',
+    groups: [
+      {
+        label: 'Officiers Supérieurs',
+        rows: [
+          { type: 'row', chars: ['erwin_smith', 'hange_zoe', 'levi_ackerman', 'dot_pyxis'] },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'era-104',
+    title: '🎖 104e Promotion — An 854',
+    groups: [
+      {
+        label: 'Membres principaux',
+        rows: [
+          { type: 'row', chars: ['eren_yeager', 'mikasa_ackerman', 'armin_arlert', 'historia_reiss'] },
+          { type: 'row', chars: ['connie_springer', 'sasha_blouse', 'jean_kirstein', 'ymir_jaw', 'floch_forster', 'gabi_braun'] },
+        ],
+      },
+    ],
+  },
+];
+
+/* ==================================================
+   RENDER
+================================================== */
+function getTitanClass(titan) {
+  if (!titan) return '';
+  if (Array.isArray(titan)) return titan[0];
+  return titan;
+}
+
+function buildCard(id) {
+  const c = CHARACTERS[id];
+  if (!c) return '';
+  const titanKey = getTitanClass(c.titan);
+  const hasTitan = !!c.titan;
+  const tt = hasTitan ? TITAN_TYPES[titanKey] : null;
+  const factionCls = `f-${c.faction}`;
+  const avCls = hasTitan ? `av-${titanKey}` : (c.faction === 'royal' ? 'av-royal' : c.faction === 'survey' ? 'av-survey' : 'av-human');
+  const hasEvents = c.events && c.events.length > 0;
+
+  const titanBadges = (() => {
+    if (!c.titan) return '';
+    const keys = Array.isArray(c.titan) ? c.titan : [c.titan];
+    return keys.map(k => `<span class="titan-badge ${TITAN_TYPES[k].cls}">${TITAN_TYPES[k].icon} ${TITAN_TYPES[k].label}</span>`).join(' ');
+  })();
+
+  return `
+    <div class="card ${factionCls} ${c.alive ? '' : 'dead'} ${hasTitan ? 'has-titan' : ''}"
+         data-id="${id}"
+         data-titan="${titanKey}"
+         data-faction="${c.faction}"
+         onclick="openModal('${id}')">
+      ${hasEvents ? `<div class="event-dot" title="${c.events.length} événement(s)">${c.events.length}</div>` : ''}
+      <div class="card-avatar ${avCls}">${c.emoji}</div>
+      <div class="card-name">${c.name}</div>
+      <div class="card-years">${c.years}</div>
+      ${titanBadges}
+    </div>`;
+}
+
+function buildRow(chars) {
+  return `<div class="tree-row">${chars.map(buildCard).join('')}</div>`;
+}
+
+function buildCoupleRow(left, right, children) {
+  const lc = CHARACTERS[left];
+  const rc = CHARACTERS[right];
+  if (!lc || !rc) return '';
+
+  const lTitan = getTitanClass(lc.titan);
+  const rTitan = getTitanClass(rc.titan);
+  const lAv = lTitan ? `av-${lTitan}` : (lc.faction === 'royal' ? 'av-royal' : 'av-human');
+  const rAv = rTitan ? `av-${rTitan}` : (rc.faction === 'royal' ? 'av-royal' : 'av-human');
+
+  const coupleHtml = `
+    <div class="couple-wrap" style="margin-bottom:0">
+      ${buildCard(left)}
+      <div class="couple-line"></div>
+      ${buildCard(right)}
+    </div>`;
+
+  if (!children || children.length === 0) return coupleHtml;
+
+  const childrenHtml = buildRow(children);
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      ${coupleHtml}
+      <div class="v-connector"></div>
+      ${childrenHtml}
+    </div>`;
+}
+
+function renderTree() {
+  const root = document.getElementById('tree');
+  let html = '';
+
+  TREE_LAYOUT.forEach(era => {
+    html += `<section class="era" id="${era.id}">`;
+    html += `<div class="era-head"><span>${era.title}</span></div>`;
+
+    era.groups.forEach(group => {
+      html += `<div class="family-group">`;
+      if (group.label) html += `<div class="family-label">${group.label}</div>`;
+
+      group.rows.forEach((rowDef, i) => {
+        if (rowDef.type === 'couple') {
+          html += buildCoupleRow(rowDef.left, rowDef.right, rowDef.children);
+        } else {
+          if (i > 0) html += `<div class="v-connector"></div>`;
+          html += buildRow(rowDef.chars);
+        }
+      });
+
+      html += `</div>`;
+    });
+
+    html += `</section>`;
+  });
+
+  root.innerHTML = html;
+}
+
+/* ==================================================
+   MODAL
+================================================== */
+function openModal(id) {
+  const c = CHARACTERS[id];
+  if (!c) return;
+
+  const titanKey = getTitanClass(c.titan);
+  const hasTitan = !!c.titan;
+  const avCls = hasTitan ? `av-${titanKey}` : (c.faction === 'royal' ? 'av-royal' : c.faction === 'survey' ? 'av-survey' : 'av-human');
+
+  const titanSection = (() => {
+    if (!c.titan) return '';
+    const keys = Array.isArray(c.titan) ? c.titan : [c.titan];
+    return `
+      <div class="m-section">
+        <div class="m-section-title">⚡ Pouvoir(s) Titan</div>
+        ${keys.map(k => `
+          <div class="titan-info-box" style="margin-bottom:8px">
+            <span class="titan-icon">${TITAN_TYPES[k].icon}</span>
+            <div>
+              <p><strong style="color:var(--gold-l)">${TITAN_TYPES[k].label}</strong></p>
+              <span>Porteur : ${c.name}</span>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  })();
+
+  const eventsSection = (() => {
+    if (!c.events || c.events.length === 0) return '';
+    return `
+      <div class="m-section">
+        <div class="m-section-title">🎬 Événements Importants</div>
+        <ul class="event-list">
+          ${c.events.map(ev => `
+            <li class="event-card">
+              <div class="event-ep">${ev.ep}</div>
+              <div class="event-body">
+                <div class="event-title">${ev.title}</div>
+                <div class="event-desc">${ev.desc}</div>
+              </div>
+            </li>`).join('')}
+        </ul>
+      </div>`;
+  })();
+
+  const factionLabel = FACTIONS[c.faction]?.label || c.faction;
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-av ${avCls}">${c.emoji}</div>
+      <div class="modal-av-info">
+        <div class="modal-name">${c.name}</div>
+        <div class="modal-sub">${factionLabel} · ${c.years} ${c.alive ? '· <span style="color:var(--green)">✓ En vie</span>' : '· <span style="color:var(--red)">† Décédé(e)</span>'}</div>
+      </div>
+    </div>
+    <div class="m-section">
+      <div class="m-section-title">📖 Biographie</div>
+      <p class="m-text">${c.description}</p>
+    </div>
+    ${titanSection}
+    ${eventsSection}`;
+
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ==================================================
+   FILTERS
+================================================== */
+document.getElementById('filter-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const filter = btn.dataset.filter;
+  document.querySelectorAll('.card').forEach(card => {
+    let show = true;
+    if (filter === 'titan')        show = card.dataset.titan && card.dataset.titan !== '';
+    else if (filter !== 'all')     show = card.classList.contains(filter);
+    card.classList.toggle('hidden', !show);
+  });
+});
+
+/* ==================================================
+   TIMELINE SCROLL
+================================================== */
+function scrollToEra(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ==================================================
+   LEGEND
+================================================== */
+function renderLegend() {
+  // Titans
+  const tLeg = document.getElementById('titan-legend');
+  tLeg.innerHTML = Object.entries(TITAN_TYPES).map(([k, v]) => `
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: var(--c-${k}); border-color: var(--c-${k})"></div>
+      <span>${v.icon} ${v.label}</span>
+    </div>`).join('');
+
+  // Factions
+  const fLeg = document.getElementById('faction-legend');
+  fLeg.innerHTML = Object.entries(FACTIONS).map(([k, v]) => `
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: ${v.color}; border-color: ${v.color}"></div>
+      <span>${v.label}</span>
+    </div>`).join('');
+}
+
+/* ==================================================
+   INIT
+================================================== */
+renderTree();
+renderLegend();
+</script>
+</body>
+</html>
