@@ -96,6 +96,18 @@
       color: var(--gold);
       background: rgba(200,168,75,.08);
     }
+    .filter-sep {
+      font-size: .62rem;
+      color: var(--gold);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      opacity: .65;
+      align-self: center;
+      white-space: nowrap;
+      border-left: 1px solid rgba(200,168,75,.25);
+      margin-left: 4px;
+    }
 
     /* ============================
        TIMELINE NAV
@@ -565,11 +577,24 @@
 <div class="filter-bar" id="filter-bar">
   <button class="filter-btn active" data-filter="all">Tous</button>
   <button class="filter-btn" data-filter="titan">Porteurs de Titans</button>
+
+  <span class="filter-sep">Familles</span>
+  <button class="filter-btn" data-filter="f-ancient">Eldiens Anciens</button>
+  <button class="filter-btn" data-filter="f-royal">Famille Royale / Reiss</button>
   <button class="filter-btn" data-filter="f-yeager">Famille Yeager</button>
-  <button class="filter-btn" data-filter="f-royal">Famille Royale</button>
   <button class="filter-btn" data-filter="f-ackerman">Clan Ackerman</button>
-  <button class="filter-btn" data-filter="f-warrior">Guerriers</button>
+  <button class="filter-btn" data-filter="f-tybur">Famille Tybur</button>
+
+  <span class="filter-sep">Unités &amp; Bataillons</span>
   <button class="filter-btn" data-filter="f-survey">Corps d'Exploration</button>
+  <button class="filter-btn" data-filter="f-garrison">Corps de Garnison</button>
+  <button class="filter-btn" data-filter="f-mp">Police des Murs</button>
+  <button class="filter-btn" data-filter="f-warrior">Guerriers de Marley</button>
+  <button class="filter-btn" data-filter="f-cadet">Cadets de Marley</button>
+
+  <span class="filter-sep">Gouvernement &amp; Mouvements</span>
+  <button class="filter-btn" data-filter="f-marley">Gouvernement Marley</button>
+  <button class="filter-btn" data-filter="f-yeagerist">Yeageristes</button>
 </div>
 
 <!-- ===================== TIMELINE NAV ===================== -->
@@ -649,13 +674,18 @@ const TITAN_TYPES = {
 };
 
 const FACTIONS = {
-  ancient:  { label: 'Antiquité / Eldia',       color: '#c8a84b' },
-  royal:    { label: 'Famille Royale / Reiss',  color: '#c8a84b' },
-  yeager:   { label: 'Famille Yeager',          color: '#c0392b' },
-  ackerman: { label: 'Clan Ackerman',           color: '#607d8b' },
-  warrior:  { label: 'Guerriers de Marley',     color: '#9c27b0' },
-  survey:   { label: 'Corps d\'Exploration',    color: '#27ae60' },
-  marley:   { label: 'Marley (autre)',          color: '#e67e22' },
+  ancient:   { label: 'Antiquité / Eldia',              color: '#c8a84b' },
+  royal:     { label: 'Famille Royale / Reiss',         color: '#c8a84b' },
+  yeager:    { label: 'Famille Yeager',                 color: '#c0392b' },
+  ackerman:  { label: 'Clan Ackerman',                  color: '#607d8b' },
+  warrior:   { label: 'Guerriers de Marley',            color: '#9c27b0' },
+  survey:    { label: 'Corps d\'Exploration',           color: '#27ae60' },
+  marley:    { label: 'Gouvernement Marley',            color: '#e67e22' },
+  garrison:  { label: 'Corps de Garnison',              color: '#2196f3' },
+  mp:        { label: 'Police des Murs',                color: '#3f51b5' },
+  tybur:     { label: 'Famille Tybur',                  color: '#8e24aa' },
+  cadet:     { label: 'Cadets de Marley',               color: '#ff7043' },
+  yeagerist: { label: 'Mouvement Yeageriste',           color: '#880e4f' },
 };
 
 /* Each character:
@@ -841,6 +871,7 @@ const CHARACTERS = {
     alive: false,
     faction: 'yeager',
     titan: ['attack', 'founding', 'warhammer'],
+    tags: ['yeagerist'],
     description: 'Protagoniste principal. Porteur du Titan Attaquant, du Titan Fondateur et du Titan Marteau de Guerre. Après avoir vu sa mère dévorée, il s\'engage à exterminer les titans. Son chemin l\'amènera à déclencher le "Grondement" pour anéantir le monde en dehors des murs.',
     parents: ['grisha_yeager', 'carla_yeager'],
     partner: null,
@@ -895,6 +926,7 @@ const CHARACTERS = {
     alive: false,
     faction: 'ackerman',
     titan: null,
+    tags: ['mp'],
     description: 'Légendaire tueur connu sous le nom de "Kenny le Tueur". Oncle de Levi. Capitaine de la Police Royale des Premiers Murs, fidèle à Uri Reiss. Aspira à posséder le Titan Fondateur.',
     parents: ['ackerman_ancestor'],
     partner: null,
@@ -1093,6 +1125,7 @@ const CHARACTERS = {
     alive: true,
     faction: 'warrior',
     titan: 'jaw',
+    tags: ['cadet'],
     description: 'Cadet de Marley, amoureux de Gabi Braun. Hérita accidentellement du Titan Mâchoire après avoir bu la liqueur vertébrale de Zeke. Manifesta des traits aviaires dans sa forme titan, lui permettant de voler.',
     parents: [],
     partner: null,
@@ -1109,6 +1142,7 @@ const CHARACTERS = {
     alive: false,
     faction: 'marley',
     titan: 'warhammer',
+    tags: ['tybur'],
     description: 'Chef de la famille Tybur et représentant de la vérité historique d\'Eldia. Sa sœur était la réelle porteuse du Titan Marteau de Guerre (le chef de famille n\'est jamais le porteur). Il fut tué par Eren lors du Festival de Liberio.',
     parents: [],
     partner: null,
@@ -1209,6 +1243,7 @@ const CHARACTERS = {
     alive: false,
     faction: 'survey',
     titan: null,
+    tags: ['garrison'],
     description: 'Commandant en Chef de la Garnison dans la région de la Muraille Sud. Stratège calme et pragmatique, aimant le saké. Transformé en titan pur par la liqueur vertébrale de Zeke.',
     parents: [],
     partner: null,
@@ -1225,6 +1260,7 @@ const CHARACTERS = {
     alive: false,
     faction: 'survey',
     titan: null,
+    tags: ['yeagerist'],
     description: 'Membre de la 104e promotion survivant de la Charge Héroïque. Devint un fanatique du mouvement Yeageriste, croyant qu\'Eren et le Grondement étaient la seule façon de sauver Paradis.',
     parents: [],
     partner: null,
@@ -1241,6 +1277,7 @@ const CHARACTERS = {
     alive: true,
     faction: 'warrior',
     titan: null,
+    tags: ['cadet'],
     description: 'Cousine de Reiner Braun. Candidate Guerrière brillante et idéologiquement endoctrinée, dédiée à l\'extermination des "Diables de Paradis". Tua Sasha Blouse. Évolua et remit en question ses croyances après sa captivité à Paradis.',
     parents: [],
     partner: null,
@@ -1402,11 +1439,14 @@ function buildCard(id) {
     return keys.map(k => `<span class="titan-badge ${TITAN_TYPES[k].cls}">${TITAN_TYPES[k].icon} ${TITAN_TYPES[k].label}</span>`).join(' ');
   })();
 
+  const dataTags = (c.tags || []).map(t => `f-${t}`).join(' ');
+
   return `
     <div class="card ${factionCls} ${c.alive ? '' : 'dead'} ${hasTitan ? 'has-titan' : ''}"
          data-id="${id}"
          data-titan="${titanKey}"
          data-faction="${c.faction}"
+         data-tags="${dataTags}"
          onclick="openModal('${id}')">
       ${hasEvents ? `<div class="event-dot" title="${c.events.length} événement(s)">${c.events.length}</div>` : ''}
       <div class="card-avatar ${avCls}">${c.emoji}</div>
@@ -1569,8 +1609,13 @@ document.getElementById('filter-bar').addEventListener('click', e => {
   const filter = btn.dataset.filter;
   document.querySelectorAll('.card').forEach(card => {
     let show = true;
-    if (filter === 'titan')        show = card.dataset.titan && card.dataset.titan !== '';
-    else if (filter !== 'all')     show = card.classList.contains(filter);
+    if (filter === 'titan') {
+      show = card.dataset.titan && card.dataset.titan !== '';
+    } else if (filter !== 'all') {
+      const inFaction = card.classList.contains(filter);
+      const inTags = (card.dataset.tags || '').split(' ').includes(filter);
+      show = inFaction || inTags;
+    }
     card.classList.toggle('hidden', !show);
   });
 });
